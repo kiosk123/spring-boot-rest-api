@@ -1,13 +1,12 @@
-package com.study.ch01;
+package com.study;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class Ch01Application {
-
+public class StartApplication {
 	public static void main(String[] args) {
-		SpringApplication.run(Ch01Application.class, args);
+		SpringApplication.run(StartApplication.class, args);
 	}
 
 }
