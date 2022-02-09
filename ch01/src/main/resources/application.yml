@@ -21,5 +21,4 @@ server:
 
 logging:
   level:
-    org.hibernate.SQL: debug #logger를 통해 출력
-    org.hibernate.type: trace #SQL 쿼리 파라미터를 확인할 수 있다
+    org.springframework: debug
