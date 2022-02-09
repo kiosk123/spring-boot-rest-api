@@ -11,7 +11,7 @@
 - thymeleaf
 - lombok
 
-
+**gradle 설정**
 ```gradle
 buildscript { 
     ext { queryDslVersion = "5.0.0"
@@ -79,3 +79,40 @@ compileQuerydsl {
 } 
 //querydsl 추가 끝
 ```
+
+**application.yml 설정**
+```yml
+spring:
+  datasource:
+    url: jdbc:h2:tcp://localhost/~/restapi
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+    
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+#        show_sql: true # System.out을 통해 출력
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.H2Dialect
+        default_batch_fetch_size: 100
+
+logging:
+  level:
+    org.hibernate.SQL: debug #logger를 통해 출력
+    org.hibernate.type: trace #SQL 쿼리 파라미터를 확인할 수 있다
+```
+
+# REST API 설계
+|설명|REST API|HTTP Method|
+|---|---|---|
+|모든 사용자 조회|/users|GET|
+|사용자 생성|/users|POST|
+|특정 사용자 조회|/users/{id}|GET|
+|특정 사용자 삭제|/users/{id}|DELETE|
+|특정 사용자의 모든 포스트 조회|/users/{id}/posts|GET|
+|특정 사용자의 포스트 생성|/users/{id}/posts|POST|
+|특정 사용자의 특정 포스트의 내용 조회|/users/{id}/posts/{post_id}|GET|
