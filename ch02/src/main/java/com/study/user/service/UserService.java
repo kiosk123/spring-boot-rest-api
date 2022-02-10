@@ -52,4 +52,16 @@ public class UserService {
             userRepository.delete(findUser.get());
         }
     }
+
+    @Transactional
+    public Optional<UserDto> updateUser(Long id) {
+        Optional<User> findUser = userRepository.findById(id);
+        if(findUser.isPresent()) {
+            User user = findUser.get();
+            user.setName(user.getName());
+            UserDto userDto = new UserDto(user.getId(), user.getName(), user.getJoinDate());
+            return Optional.of(userDto);
+        } 
+        return Optional.empty();
+    }
 }
