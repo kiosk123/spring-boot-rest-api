@@ -85,11 +85,11 @@ public class UserService {
     }
 
     @Transactional
-    public Optional<UserDto> updateUser(Long id) {
-        Optional<User> findUser = userRepository.findById(id);
+    public Optional<UserDto> updateUser(UserRequestDto userRequestDto) {
+        Optional<User> findUser = userRepository.findById(userRequestDto.getId());
         if(findUser.isPresent()) {
             User user = findUser.get();
-            user.setName(user.getName());
+            user.setName(userRequestDto.getName());
             UserDto userDto = new UserDto(user.getId(), user.getName(), user.getJoinDate());
             return Optional.of(userDto);
         } 
@@ -172,6 +172,9 @@ public class UserResponseDto extends BaseDto {
 public class UserRequestDto {
     private Long id;
     private String name;
+
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") /** JSON 날짜 응답 포맷 지정 */
     private LocalDateTime joinDate;
 }
 ```
@@ -363,14 +366,15 @@ public class UserControllerV2 implements V2Controller {
         userService.removeUser(id);
     }
 
-    @PutMapping("/users/{id}")
-    public ResponseEntity<Void> updateUser(@PathVariable("id") Long id) {
-        Optional<UserDto> findUser = userService.updateUser(id);
+    @PutMapping("/users")
+    public ResponseEntity<Void> updateUser(@RequestBody UserRequestDto userRequestDto) {
+        Optional<UserDto> findUser = userService.updateUser(userRequestDto);
         if (findUser.isEmpty()) {
-            throw new UserNotFoundException(String.format("ID[%s] not found", id));
+            throw new UserNotFoundException(String.format("ID[%s] not found", userRequestDto.getId()));
         }
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-            .buildAndExpand(id)
+            .path("/{id}")
+            .buildAndExpand(userRequestDto.getId())
             .toUri();
         
         HttpHeaders responseHeaders = new HttpHeaders();

@@ -4,6 +4,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
+import javax.validation.Valid;
+
 import com.study.common.api.v2.V2Controller;
 import com.study.common.exception.UserNotFoundException;
 import com.study.user.domain.User;
@@ -46,28 +48,18 @@ public class UserControllerV2 implements V2Controller {
         throw new UserNotFoundException(String.format("ID[%s] not found", id));
     }
 
-    /**
-     * RestController에서 POST처리시 @RequestBody는 필수
-     */
     @PostMapping("/users")
-    public ResponseEntity<Void> createUser(@RequestBody UserRequestDto userRequestDto) {
+    public ResponseEntity<Void> createUser(@Valid @RequestBody UserRequestDto userRequestDto) {
         User user = User.builder()
             .name(userRequestDto.getName())
             .build();
         Long id = userService.saveUser(user);
 
-        /**
-         * 현재 요청 URI /users에 /{id}를 추가하여 /users/{id}로 URI를 만들고
-         * {id}에 id값을 매핑한 URI 생성
-         */
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
             .path("/{id}") 
             .buildAndExpand(id)
             .toUri();
         
-        /** 201 상태 응답값 반환 
-         *  응답헤더 Location 키에 위에서 만든 URI 값이 매핑됨 http://localhost:8080/v2/users/4
-         */
         return ResponseEntity.created(location).build();
     }
 
@@ -76,15 +68,14 @@ public class UserControllerV2 implements V2Controller {
         userService.removeUser(id);
     }
 
-    @PutMapping("/users")
-    public ResponseEntity<Void> updateUser(@RequestBody UserRequestDto userRequestDto) {
-        Optional<UserDto> findUser = userService.updateUser(userRequestDto);
+    @PutMapping("/users/{id}")
+    public ResponseEntity<Void> updateUser(@PathVariable("id") Long id, @Req) {
+        Optional<UserDto> findUser = userService.updateUser(id);
         if (findUser.isEmpty()) {
-            throw new UserNotFoundException(String.format("ID[%s] not found", userRequestDto.getId()));
+            throw new UserNotFoundException(String.format("ID[%s] not found", id));
         }
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-            .path("/{id}")
-            .buildAndExpand(userRequestDto.getId())
+            .buildAndExpand(id)
             .toUri();
         
         HttpHeaders responseHeaders = new HttpHeaders();

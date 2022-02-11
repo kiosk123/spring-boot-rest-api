@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import com.study.user.domain.User;
 import com.study.user.dto.UserDto;
-import com.study.user.dto.UserRequestDto;
 import com.study.user.repository.UserRepository;
 
 import org.springframework.stereotype.Service;
@@ -55,11 +54,11 @@ public class UserService {
     }
 
     @Transactional
-    public Optional<UserDto> updateUser(UserRequestDto userRequestDto) {
-        Optional<User> findUser = userRepository.findById(userRequestDto.getId());
+    public Optional<UserDto> updateUser(Long id) {
+        Optional<User> findUser = userRepository.findById(id);
         if(findUser.isPresent()) {
             User user = findUser.get();
-            user.setName(userRequestDto.getName());
+            user.setName(user.getName());
             UserDto userDto = new UserDto(user.getId(), user.getName(), user.getJoinDate());
             return Optional.of(userDto);
         } 
