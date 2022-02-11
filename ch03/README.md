@@ -407,3 +407,346 @@ public class UserDto {
 }
 ```
 
+- 그리고 API 응답으로 주는 JSON에서 노출시키고 싶지 않은 필드는 `@JsonIgnore` 필드를 추가한다
+```java
+@AllArgsConstructor
+@Getter
+public class UserDto {
+    private Long id;
+
+    @Setter
+    private String name;
+
+    @Setter
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") /** JSON 날짜 응답 포맷 지정 */
+    private LocalDateTime joinDate;
+
+    @JsonIgnore
+    @Setter
+    private String password;
+
+    @JsonIgnore
+    @Setter
+    private String ssn;
+}
+```
+- 다음과 같이 `@JsonIgnoreProperties`를 활용해서 클래스 레벨에서 처리할 수도 있다.
+```java
+@AllArgsConstructor
+@Getter
+@JsonIgnoreProperties(value = {"password", "ssn"})
+public class UserDto {
+    private Long id;
+
+    @Setter
+    private String name;
+
+    @Setter
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") /** JSON 날짜 응답 포맷 지정 */
+    private LocalDateTime joinDate;
+
+    @Setter
+    private String password;
+
+    @Setter
+    private String ssn;
+}
+``` 
+
+- 결과  
+![.](./img/7.png)  
+
+## Response 데이터 제어를 위한 Filtering - 프로그래밍으로 필터링하기 (개별 사용자 조회)
+
+`@JsonFilter`를 이용한다. `@JsonFilter`에 설정된 필터 값은 컨트롤러 클래스 또는 서비스 클래스에서 사용된다.
+
+- DTO 수정
+```java
+@AllArgsConstructor
+@Getter
+@JsonFilter("UserInfo")
+public class UserDto {
+    private Long id;
+
+    @Setter
+    private String name;
+
+    @Setter
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") /** JSON 날짜 응답 포맷 지정 */
+    private LocalDateTime joinDate;
+
+    @Setter
+    private String password;
+
+    @Setter
+    private String ssn;
+}
+```
+
+- `AdminUserControllerV1` 클래스 작성
+```java
+@RequiredArgsConstructor
+@RestController
+public class AdminUserControllerV1 implements V1Controller {
+    
+    private final UserService userService;
+
+    @GetMapping("/admin/users")
+    public List<UserDto> retrieveAllUsers() {
+        List<UserDto> users = userService.findAll();
+        return users;
+    }
+
+    /** 프로그래밍 filtering 적용한 개별 사용자 조회 */
+    @GetMapping("/admin/users/{id}")
+    public MappingJacksonValue retrieveUser(@PathVariable("id") Long id) {
+        Optional<UserDto> user = userService.findOneUser(id);
+        if (user.isPresent()) {
+            SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "joinDate", "ssn");
+            FilterProvider filterProvider = new SimpleFilterProvider().addFilter("UserInfo", filter); // @JsonFilter("UserInfo"), filter
+
+            MappingJacksonValue mapping = new MappingJacksonValue(user.get());
+            mapping.setFilters(filterProvider);
+            return mapping;
+        }
+        throw new UserNotFoundException(String.format("ID[%s] not found", id));
+    }
+}
+```
+
+- 결과  
+![.](./img/8.png)  
+
+## Response 데이터 제어를 위한 Filtering - 프로그래밍으로 필터링하기 (전체 사용자 조회)
+
+- `AdminUserControllerV1` 클래스 전체 사용자 조회 API 메서드 수정
+```java
+@RequiredArgsConstructor
+@RestController
+public class AdminUserControllerV1 implements V1Controller {
+    
+    private final UserService userService;
+
+    @GetMapping("/admin/users")
+    public MappingJacksonValue retrieveAllUsers() {
+        List<UserDto> users = userService.findAll();
+
+        SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "joinDate", "ssn");
+        FilterProvider filterProvider = new SimpleFilterProvider().addFilter("UserInfo", filter); // @JsonFilter("UserInfo"), filter
+
+        MappingJacksonValue mapping = new MappingJacksonValue(users);
+        mapping.setFilters(filterProvider);
+
+        return mapping;
+    }
+
+    @GetMapping("/admin/users/{id}")
+    public MappingJacksonValue retrieveUser(@PathVariable("id") Long id) {
+        Optional<UserDto> user = userService.findOneUser(id);
+        if (user.isPresent()) {
+            SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "joinDate", "ssn");
+            FilterProvider filterProvider = new SimpleFilterProvider().addFilter("UserInfo", filter); // @JsonFilter("UserInfo"), filter
+
+            MappingJacksonValue mapping = new MappingJacksonValue(user.get());
+            mapping.setFilters(filterProvider);
+            return mapping;
+        }
+        throw new UserNotFoundException(String.format("ID[%s] not found", id));
+    }
+}
+```
+- 결과  
+![.](./img/9.png)  
+
+## URI를 통한 REST API Version 관리
+
+- 첫번째 방법: 인터페이스에 버전 붙이고 컨트롤러가 상속하는 방법
+```java
+@RequestMapping("/v2")
+public interface V2Controller {
+    
+}
+
+@RestController
+public class AdminUserControllerV2 implements V2Controller {
+    //...
+}
+```
+
+- 두번째 방법: 메서드 URI에 직접 버전을 붙이는 방법
+```java
+@GetMapping("/admin/v2/users/{id}")
+public MappingJacksonValue retrieveUser(@PathVariable("id") Long id) {
+    //...
+}
+```
+
+- V2 버전에 맞게 DTO 상속하여 새로 생성
+```java
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter @Setter
+@JsonFilter("UserInfo")
+public class UserDto {
+    private Long id;
+
+    private String name;
+
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") /** JSON 날짜 응답 포맷 지정 */
+    private LocalDateTime joinDate;
+
+    private String password;
+
+    private String ssn;
+}
+
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter @Setter
+@JsonFilter("UserInfoV2")
+public class UserDtoV2 extends UserDto {
+    private String grade;
+}
+```
+
+- 사용자 상세조회 V2 버전 REST API
+```java
+@RequiredArgsConstructor
+@RestController
+public class AdminUserControllerV2 implements V2Controller {
+
+    private final UserService userService;
+
+    //... 생략
+
+    @GetMapping("/admin/users/{id}")
+    public MappingJacksonValue retrieveUser(@PathVariable("id") Long id) {
+        Optional<UserDto> user = userService.findOneUser(id);
+        if (user.isPresent()) {
+            SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "joinDate", "ssn", "grade");
+            FilterProvider filterProvider = new SimpleFilterProvider().addFilter("UserInfoV2", filter); // @JsonFilter("UserInfoV2"), filter
+
+            UserDtoV2 userDtoV2 = new UserDtoV2();
+            userDtoV2.setGrade("VIP");
+
+            BeanUtils.copyProperties(user.get(), userDtoV2); // 같은 필드명이 있다면 그 필드의 데이터를 동일한 필드명에 복사 - setter메서드가 필수적으로 있어야함
+
+            MappingJacksonValue mapping = new MappingJacksonValue(userDtoV2);
+            mapping.setFilters(filterProvider);
+            return mapping;
+        }
+        throw new UserNotFoundException(String.format("ID[%s] not found", id));
+    }
+}
+```
+
+- 결과  
+![.](./img/10.png)  
+
+## Request Parameter와 Header 그리고 MIME 타입을 이용한 API Version 관리
+- Request Parameter를 이용하는 방법
+```java
+@RequiredArgsConstructor
+@RestController
+public class AdminUserControllerV2 {
+
+    private final UserService userService;
+
+    // 생략
+
+    @GetMapping(value = "/admin/users/{id}", params = "version=2") // version=2인 쿼리파라미터와 매칭
+    public MappingJacksonValue retrieveUser(@PathVariable("id") Long id) {
+        Optional<UserDto> user = userService.findOneUser(id);
+        if (user.isPresent()) {
+            SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "joinDate", "ssn", "grade");
+            FilterProvider filterProvider = new SimpleFilterProvider().addFilter("UserInfoV2", filter); // @JsonFilter("UserInfoV2"), filter
+
+            UserDtoV2 userDtoV2 = new UserDtoV2();
+            userDtoV2.setGrade("VIP");
+
+            BeanUtils.copyProperties(user.get(), userDtoV2); // 같은 필드명이 있다면 그 필드의 데이터를 동일한 필드명에 복사 - setter메서드가 필수적으로 있어야함
+
+            MappingJacksonValue mapping = new MappingJacksonValue(userDtoV2);
+            mapping.setFilters(filterProvider);
+            return mapping;
+        }
+        throw new UserNotFoundException(String.format("ID[%s] not found", id));
+    }
+}
+```
+- 결과  
+![.](./img/11.png)  
+
+- Header를 이용한 방법
+
+```java
+@RequiredArgsConstructor
+@RestController
+public class AdminUserControllerV2 {
+
+    private final UserService userService;
+
+    //... 생략
+
+    @GetMapping(value = "/admin/users/{id}", headers = "X-API-VERSION=2") // X-API-VERSION값이 2이면 이 URI와 매칭
+    public MappingJacksonValue retrieveUser(@PathVariable("id") Long id) {
+        Optional<UserDto> user = userService.findOneUser(id);
+        if (user.isPresent()) {
+            SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "joinDate", "ssn", "grade");
+            FilterProvider filterProvider = new SimpleFilterProvider().addFilter("UserInfoV2", filter); // @JsonFilter("UserInfoV2"), filter
+
+            UserDtoV2 userDtoV2 = new UserDtoV2();
+            userDtoV2.setGrade("VIP");
+
+            BeanUtils.copyProperties(user.get(), userDtoV2); // 같은 필드명이 있다면 그 필드의 데이터를 동일한 필드명에 복사 - setter메서드가 필수적으로 있어야함
+
+            MappingJacksonValue mapping = new MappingJacksonValue(userDtoV2);
+            mapping.setFilters(filterProvider);
+            return mapping;
+        }
+        throw new UserNotFoundException(String.format("ID[%s] not found", id));
+    }
+}
+```
+
+- 결과  
+![.](./img/12.png)  
+
+- MIME 타입을 이용한 방법
+```java
+@RequiredArgsConstructor
+@RestController
+public class AdminUserControllerV2 {
+
+    private final UserService userService;
+
+    //... 
+
+    @GetMapping(value = "/admin/users/{id}", produces = "application/vnd.company.appv2+json") // vnd는 vender의 약자
+    public MappingJacksonValue retrieveUser(@PathVariable("id") Long id) {
+        Optional<UserDto> user = userService.findOneUser(id);
+        if (user.isPresent()) {
+            SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "joinDate", "ssn", "grade");
+            FilterProvider filterProvider = new SimpleFilterProvider().addFilter("UserInfoV2", filter); // @JsonFilter("UserInfoV2"), filter
+
+            UserDtoV2 userDtoV2 = new UserDtoV2();
+            userDtoV2.setGrade("VIP");
+
+            BeanUtils.copyProperties(user.get(), userDtoV2); // 같은 필드명이 있다면 그 필드의 데이터를 동일한 필드명에 복사 - setter메서드가 필수적으로 있어야함
+
+            MappingJacksonValue mapping = new MappingJacksonValue(userDtoV2);
+            mapping.setFilters(filterProvider);
+            return mapping;
+        }
+        throw new UserNotFoundException(String.format("ID[%s] not found", id));
+    }
+}
+```
+
+- 결과  
+![.](./img/13.png)  

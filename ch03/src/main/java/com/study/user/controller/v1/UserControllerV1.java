@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 import com.study.common.api.v1.V1Controller;
+import com.study.user.controller.v1.dto.UserDto;
+import com.study.user.controller.v1.dto.UserRequestDto;
+import com.study.user.controller.v1.dto.UserResponseDto;
 import com.study.user.domain.User;
-import com.study.user.dto.UserDto;
-import com.study.user.dto.UserRequestDto;
-import com.study.user.dto.UserResponseDto;
 import com.study.user.service.UserService;
 
 import org.springframework.http.HttpStatus;

@@ -8,9 +8,9 @@ import javax.validation.Valid;
 
 import com.study.common.api.v2.V2Controller;
 import com.study.common.exception.UserNotFoundException;
+import com.study.user.controller.v1.dto.UserDto;
+import com.study.user.controller.v1.dto.UserRequestDto;
 import com.study.user.domain.User;
-import com.study.user.dto.UserDto;
-import com.study.user.dto.UserRequestDto;
 import com.study.user.service.UserService;
 
 import org.springframework.http.HttpHeaders;

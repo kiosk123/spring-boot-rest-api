@@ -1,4 +1,4 @@
-package com.study.user.dto;
+package com.study.user.controller.v1.dto;
 
 import java.time.LocalDateTime;
 
