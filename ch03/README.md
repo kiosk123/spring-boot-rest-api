@@ -270,3 +270,140 @@ public class HelloControllerV1 implements V1Controller {
 ## Response 데이터 형식 변환 - XML format
 - 의존성 라이브러리 추가
   - `implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'`
+- POSTMAN을 통해 요청 헤더 값을 `Accept: application/xml`로 설정 후 API를 호출한다.  
+![.](./img/5.png)  
+
+## Response 데이터 제어를 위한 Filtering
+API통해 응답되는 데이터 중에 중요데이터는 클라이언트가 바로 받아보는 것이 아니라 제어하는 법에 대해서 알아본다  
+![.](./img/6.png)  
+- User 도메인 수정
+```java
+@EntityListeners(AuditingEntityListener.class)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+@Entity
+public class User {
+    
+    @Id @GeneratedValue
+    private Long id;
+
+    @Setter
+    private String name;
+
+    @Setter
+    private String password;
+
+    @Setter
+    private String ssn;
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime joinDate;
+
+    @Builder
+    private User(String name, String password, String ssn) {
+        this.name = name;
+        this.password = password;
+        this.ssn = ssn;
+    }
+}
+```
+- UserService 수정
+```java
+@RequiredArgsConstructor
+@Service
+@Transactional
+public class UserService {
+    
+    private final UserRepository userRepository;
+
+    @Transactional
+    public Long saveUser(User user) {
+        User savedUser = userRepository.save(user);
+        return savedUser.getId();
+    }
+
+    public Optional<UserDto> findOneUser(Long id) {
+        Optional<User> findUser = userRepository.findById(id);
+        if (findUser.isPresent()) {
+            User user = findUser.get();
+            UserDto userDto = new UserDto(user.getId(), user.getName(), user.getJoinDate(), user.getPassword(), user.getSsn());
+            return Optional.of(userDto);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public List<UserDto> findAll() {
+        return userRepository
+                    .findAll()
+                    .stream()
+                    .map(user -> new UserDto(user.getId(), user.getName(), user.getJoinDate(), user.getPassword(), user.getSsn()))
+                    .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void removeUser(Long id) {
+        Optional<User> findUser = userRepository.findById(id);
+        if (findUser.isPresent()) { 
+            userRepository.delete(findUser.get());
+        }
+    }
+
+    @Transactional
+    public Optional<UserDto> updateUser(UserRequestDto userRequestDto) {
+        Optional<User> findUser = userRepository.findById(userRequestDto.getId());
+        if(findUser.isPresent()) {
+            User user = findUser.get();
+            user.setName(userRequestDto.getName());
+            user.setPassword(userRequestDto.getPassword());
+            user.setSsn(userRequestDto.getSsn());
+            
+            UserDto userDto = new UserDto(user.getId(), user.getName(), user.getJoinDate(), user.getPassword(), user.getSsn());
+            return Optional.of(userDto);
+        } 
+        return Optional.empty();
+    }
+}
+```
+
+- DTO 수정
+```java
+@NoArgsConstructor
+@Getter @Setter
+public class UserRequestDto {
+    private Long id;
+    
+    @Size(min = 2, message = "name은 2글자 입력해주세요")
+    private String name;
+
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") /** JSON 날짜 응답 포맷 지정 */
+    @Past(message = "날짜 포맷이 \'yyyy-MM-dd HH:mm:ss\'이 아닙니다")
+    private LocalDateTime joinDate;
+    private String password;
+    private String ssn;
+}
+
+
+@AllArgsConstructor
+@Getter
+public class UserDto {
+    private Long id;
+
+    @Setter
+    private String name;
+
+    @Setter
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") /** JSON 날짜 응답 포맷 지정 */
+    private LocalDateTime joinDate;
+
+    @Setter
+    private String password;
+
+    @Setter
+    private String ssn;
+}
+```
+

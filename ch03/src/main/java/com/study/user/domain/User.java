@@ -30,12 +30,20 @@ public class User {
     @Setter
     private String name;
 
+    @Setter
+    private String password;
+
+    @Setter
+    private String ssn;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime joinDate;
 
     @Builder
-    private User(String name) {
+    private User(String name, String password, String ssn) {
         this.name = name;
+        this.password = password;
+        this.ssn = ssn;
     }
 }

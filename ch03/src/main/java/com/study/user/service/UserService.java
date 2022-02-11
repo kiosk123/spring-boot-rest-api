@@ -31,7 +31,7 @@ public class UserService {
         Optional<User> findUser = userRepository.findById(id);
         if (findUser.isPresent()) {
             User user = findUser.get();
-            UserDto userDto = new UserDto(user.getId(), user.getName(), user.getJoinDate());
+            UserDto userDto = new UserDto(user.getId(), user.getName(), user.getJoinDate(), user.getPassword(), user.getSsn());
             return Optional.of(userDto);
         } else {
             return Optional.empty();
@@ -42,7 +42,7 @@ public class UserService {
         return userRepository
                     .findAll()
                     .stream()
-                    .map(user -> new UserDto(user.getId(), user.getName(), user.getJoinDate()))
+                    .map(user -> new UserDto(user.getId(), user.getName(), user.getJoinDate(), user.getPassword(), user.getSsn()))
                     .collect(Collectors.toList());
     }
 
@@ -60,7 +60,10 @@ public class UserService {
         if(findUser.isPresent()) {
             User user = findUser.get();
             user.setName(userRequestDto.getName());
-            UserDto userDto = new UserDto(user.getId(), user.getName(), user.getJoinDate());
+            user.setPassword(userRequestDto.getPassword());
+            user.setSsn(userRequestDto.getSsn());
+            
+            UserDto userDto = new UserDto(user.getId(), user.getName(), user.getJoinDate(), user.getPassword(), user.getSsn());
             return Optional.of(userDto);
         } 
         return Optional.empty();

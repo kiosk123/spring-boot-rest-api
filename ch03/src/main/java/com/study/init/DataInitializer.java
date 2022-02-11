@@ -36,16 +36,18 @@ public class DataInitializer {
         public void insertInitData() {
             List<User> users = new ArrayList<>();
             
-            users.add(createUser("Kenneth"));
-            users.add(createUser("Alice"));
-            users.add(createUser("Elena"));
+            users.add(createUser("Kenneth", "test1", "701010-1111111"));
+            users.add(createUser("Alice", "test2", "801111-2222222"));
+            users.add(createUser("Elena", "test3", "901212-1111111"));
 
             users.forEach(userService::saveUser);
         }
 
-        private User createUser(String name) {
+        private User createUser(String name, String password, String ssn) {
             return User.builder()
             .name(name)
+            .password(password)
+            .ssn(ssn)
             .build();
         }
     }
