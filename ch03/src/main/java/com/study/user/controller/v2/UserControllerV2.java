@@ -48,8 +48,11 @@ public class UserControllerV2 implements V2Controller {
         throw new UserNotFoundException(String.format("ID[%s] not found", id));
     }
 
+    /**
+     * @Valid 어노테이션 추가하여 밸리데이션 활성화
+     */
     @PostMapping("/users")
-    public ResponseEntity<Void> createUser(@Valid @RequestBody UserRequestDto userRequestDto) {
+    public ResponseEntity<Void> createUser(@RequestBody @Valid UserRequestDto userRequestDto) {
         User user = User.builder()
             .name(userRequestDto.getName())
             .build();
@@ -59,7 +62,6 @@ public class UserControllerV2 implements V2Controller {
             .path("/{id}") 
             .buildAndExpand(id)
             .toUri();
-        
         return ResponseEntity.created(location).build();
     }
 
@@ -68,14 +70,18 @@ public class UserControllerV2 implements V2Controller {
         userService.removeUser(id);
     }
 
-    @PutMapping("/users/{id}")
-    public ResponseEntity<Void> updateUser(@PathVariable("id") Long id, @Req) {
-        Optional<UserDto> findUser = userService.updateUser(id);
+    /**
+     * @Valid 어노테이션 추가하여 밸리데이션 활성화
+     */
+    @PutMapping("/users")
+    public ResponseEntity<Void> updateUser(@RequestBody @Valid UserRequestDto userRequestDto) {
+        Optional<UserDto> findUser = userService.updateUser(userRequestDto);
         if (findUser.isEmpty()) {
-            throw new UserNotFoundException(String.format("ID[%s] not found", id));
+            throw new UserNotFoundException(String.format("ID[%s] not found", userRequestDto.getId()));
         }
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-            .buildAndExpand(id)
+            .path("/{id}")
+            .buildAndExpand(userRequestDto.getId())
             .toUri();
         
         HttpHeaders responseHeaders = new HttpHeaders();
