@@ -31,6 +31,9 @@ public EntityModel<UserDto> retrieveUser(@PathVariable("id") Long id) {
     throw new UserNotFoundException(String.format("ID[%s] not found", id));
 }
 ```
+- 결과  
+![.](./img/3.png)  
+
 - `@JsonFilter` 적용한 Dto를 HATEOAS로 처리하는 방법
 ```java
 @RequiredArgsConstructor
@@ -89,8 +92,6 @@ public class AdminUserControllerV2 implements V2Controller {
 ```
 
 
-- 결과  
-![.](./img/3.png)  
 
 ## REST API Documentation을 위한 Swagger 사용 
 ![.](./img/4.png)  
