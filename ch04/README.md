@@ -138,7 +138,7 @@ public class SwaggerConfig {
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {
-
+    
     /** API 생성한 사람 연락처 Default 정보 */
     private static final Contact DEFAULT_CONTACT = new Contact("JongTae, Heo", "https://github.com/kiosk123",
             "heo9910@naver.com");
@@ -155,7 +155,7 @@ public class SwaggerConfig {
 
     /** 지원하는 데이터 타입 정보 */
     private static final Set<String> DEFAULT_PRODUCES_AND_CONSUMES = new HashSet<>(
-            Arrays.asList(MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE));
+        Arrays.asList(MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE));
 
     @Bean
     public Docket api() {
@@ -197,10 +197,10 @@ public class UserDto {
 ```java
 @RestController
 public class HelloController {
-
+    
     @Operation(summary = "test hello", description = "hello api example")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK !!"),
+        @ApiResponse(responseCode = "200", description = "OK !!"),
             @ApiResponse(responseCode = "400", description = "BAD REQUEST !!"),
             @ApiResponse(responseCode = "404", description = "NOT FOUND !!"),
             @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR !!")
@@ -222,3 +222,9 @@ public List<UserDto> retrieveAllUsers() {
 }
 ```
 
+## Actuator를 이용한 REST API Monitoring
+    ![.](./img/6.png)  
+- build.gradle 의존성 추가
+```gradle
+implementation 'org.springframework.boot:spring-boot-starter-actuator'
+```

@@ -32,6 +32,7 @@ dependencies {
 	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
 	implementation 'org.springframework.boot:spring-boot-starter-hateoas'
 	implementation 'io.springfox:springfox-boot-starter:3.0.0' // Swagger
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
 	//querydsl 추가 
     implementation "com.querydsl:querydsl-jpa:${queryDslVersion}" 
