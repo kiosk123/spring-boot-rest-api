@@ -6,7 +6,6 @@ import java.util.Optional;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.study.common.api.v2.V2Controller;
 import com.study.common.exception.UserNotFoundException;
 import com.study.user.controller.v1.dto.UserDto;
 import com.study.user.controller.v2.dto.UserDtoV2;
