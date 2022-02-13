@@ -327,4 +327,4 @@ public class PostControllerV2 implements V2Controller {
 }
 ```
 
-## PUT과 DELETE는 차후에 구현 예정
+## PUT과 DELETE 그리고 POST하나만 조회는 차후에 구현 예정
