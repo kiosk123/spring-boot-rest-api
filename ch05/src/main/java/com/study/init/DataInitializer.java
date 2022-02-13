@@ -36,9 +36,9 @@ public class DataInitializer {
         public void insertInitData() {
             List<User> users = new ArrayList<>();
             
-            users.add(createUser("Kenneth", "test1", "701010-1111111"));
-            users.add(createUser("Alice", "test2", "801111-2222222"));
-            users.add(createUser("Elena", "test3", "901212-1111111"));
+            users.add(createUser("user1", "test1", "701010-1111111"));
+            users.add(createUser("user2", "test2", "801111-2222222"));
+            users.add(createUser("user3", "test3", "901212-1111111"));
 
             users.forEach(userService::saveUser);
         }

@@ -1,1 +1,179 @@
 # JPA 연동을 통한 REST API 개발
+
+## SecurityConfig 클래스 수정
+- CSRF `disable()` 의 의미 - [링크](https://zzang9ha.tistory.com/341)
+- frameOptions `disable()`의 의미 - [링크](https://gigas-blog.tistory.com/124)
+
+```java
+@Configuration
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Override
+    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.inMemoryAuthentication()
+            .withUser("user")
+            .password("123123")
+            .roles("USER");
+    }
+    
+    
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.csrf().disable();   // csrf protection 기능을 disable한다
+        http.headers().frameOptions().disable(); // Header의 FrameOption 기능을 disable 한다.
+
+        http.authorizeRequests().antMatchers("/h2-console/**").permitAll()
+            .anyRequest().authenticated();
+        
+        http.httpBasic();  // http basic 인증을 사용하겠다
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
+    }
+}
+```
+
+## JPA 엔티티 클래스 선언
+```java
+@EntityListeners(AuditingEntityListener.class)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+@Entity
+public class User {
+    
+    @Id @GeneratedValue
+    private Long id;
+
+    @Setter
+    private String name;
+
+    @Setter
+    private String password;
+
+    @Setter
+    private String ssn;
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime joinDate;
+
+    @Builder
+    private User(String name, String password, String ssn) {
+        this.name = name;
+        this.password = password;
+        this.ssn = ssn;
+    }
+}
+```
+## `application.yml` 옵션 다음과 같이 설정
+```yml
+spring:
+  messages:
+    basename: messages # 다국어 식별 기본 파일명
+  datasource:
+    url: jdbc:h2:tcp://localhost/~/restapi
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+#        show_sql: true # System.out을 통해 출력
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.H2Dialect
+        default_batch_fetch_size: 100
+```
+## JPA Auditing을 사용하기 때문에 `@EnableJpaAuditing` 다음과 같이 설정
+```java
+@EnableJpaAuditing
+@SpringBootApplication
+public class StartApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(StartApplication.class, args);
+	}
+
+	@Bean
+	public LocaleResolver localeResolver() {
+		SessionLocaleResolver localeResolver = new SessionLocaleResolver();
+		localeResolver.setDefaultLocale(Locale.KOREA);
+		return localeResolver;
+	}
+}
+```
+## Spring Boot 실행시 SQL Scripts 파일 실행하는 방법
+[링크](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto.data-initialization.using-basic-sql-scripts)
+
+## `UserRepository` 정의
+
+```java
+public interface UserRepository extends JpaRepository<User, Long> {
+    
+}
+```
+
+## `UserService`정의
+```java
+RequiredArgsConstructor
+@Service
+@Transactional
+public class UserService {
+    
+    private final UserRepository userRepository;
+
+    @Transactional
+    public Long saveUser(User user) {
+        User savedUser = userRepository.save(user);
+        return savedUser.getId();
+    }
+
+    public Optional<UserDto> findOneUser(Long id) {
+        Optional<User> findUser = userRepository.findById(id);
+        if (findUser.isPresent()) {
+            User user = findUser.get();
+            UserDto userDto = new UserDto(user.getId(), user.getName(), user.getJoinDate(), user.getPassword(), user.getSsn());
+            return Optional.of(userDto);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public List<UserDto> findAll() {
+        return userRepository
+                    .findAll()
+                    .stream()
+                    .map(user -> new UserDto(user.getId(), user.getName(), user.getJoinDate(), user.getPassword(), user.getSsn()))
+                    .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void removeUser(Long id) {
+        Optional<User> findUser = userRepository.findById(id);
+        if (findUser.isPresent()) { 
+            userRepository.delete(findUser.get());
+        }
+    }
+
+    @Transactional
+    public Optional<UserDto> updateUser(UserRequestDto userRequestDto) {
+        Optional<User> findUser = userRepository.findById(userRequestDto.getId());
+        if(findUser.isPresent()) {
+            User user = findUser.get();
+            user.setName(userRequestDto.getName());
+            user.setPassword(userRequestDto.getPassword());
+            user.setSsn(userRequestDto.getSsn());
+            
+            UserDto userDto = new UserDto(user.getId(), user.getName(), user.getJoinDate(), user.getPassword(), user.getSsn());
+            return Optional.of(userDto);
+        } 
+        return Optional.empty();
+    }
+}
+```
+

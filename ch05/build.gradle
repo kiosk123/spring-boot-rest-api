@@ -33,7 +33,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-hateoas'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.data:spring-data-rest-hal-browser:3.3.9.RELEASE'
-	// implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	//querydsl 추가 
     implementation "com.querydsl:querydsl-jpa:${queryDslVersion}" 
