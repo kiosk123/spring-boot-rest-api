@@ -133,7 +133,7 @@ public class UserService {
         return savedUser.getId();
     }
 
-    public Optional<UserDto> findOneUser(Long id) {
+    public Optional<UserDto> findOneUserDto(Long id) {
         Optional<User> findUser = userRepository.findById(id);
         if (findUser.isPresent()) {
             User user = findUser.get();
@@ -173,6 +173,87 @@ public class UserService {
             return Optional.of(userDto);
         } 
         return Optional.empty();
+    }
+}
+```
+
+## Post 엔티티 추가 및 User 엔티티와 연관관계 설정
+```java
+@EntityListeners(AuditingEntityListener.class)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+@Entity
+public class Post {
+    @Id @GeneratedValue
+    private Long id;
+
+    @Setter
+    String description;
+
+    @Setter
+    @JoinColumn(name = "USER_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User user;
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createDate;
+
+    @LastModifiedDate
+    private LocalDateTime updateDate;
+
+    @Builder
+    public Post(String description, User user) {
+        this.description = description;
+        this.user = user;
+    }
+}
+
+@EntityListeners(AuditingEntityListener.class)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+@Entity
+public class User {
+    
+    @Id @GeneratedValue
+    private Long id;
+
+    @Setter
+    private String name;
+
+    @Setter
+    private String password;
+
+    @Setter
+    private String ssn;
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime joinDate;
+
+    @BatchSize(size = 100)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Post> posts = new ArrayList<>();
+
+    @Builder
+    private User(String name, String password, String ssn, Post post) {
+        this.name = name;
+        this.password = password;
+        this.ssn = ssn;
+        posts.add(post);
+        post.setUser(this);
+    }
+
+    /** Post 삭제시 사용될 수 있는 연관관계 편의 메서드 */
+    public void removePost(Post post) {
+        Iterator<Post> iter = posts.iterator();
+        while (iter.hasNext()) {
+            Post target = iter.next();
+            if (target.getId().equals(post.getId())) {
+                iter.remove();
+                break;
+            }
+        }
     }
 }
 ```

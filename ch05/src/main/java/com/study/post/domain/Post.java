@@ -18,8 +18,10 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -29,6 +31,10 @@ public class Post {
     @Id @GeneratedValue
     private Long id;
 
+    @Setter
+    String description;
+
+    @Setter
     @JoinColumn(name = "USER_ID")
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
@@ -38,5 +44,11 @@ public class Post {
     private LocalDateTime createDate;
 
     @LastModifiedDate
-    private LocalDateTime updateDate;;
+    private LocalDateTime updateDate;
+
+    @Builder
+    public Post(String description, User user) {
+        this.description = description;
+        this.user = user;
+    }
 }
