@@ -167,3 +167,58 @@ public class SwaggerConfig {
 }
 ```
 
+- DTO 객체에 대한 Documentation 추가하기
+```java
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter @Setter
+@JsonFilter("UserInfo")
+@ApiModel(description = "사용자 상세 정보를 위한 객체") // Swagger
+public class UserDto {
+    private Long id;
+
+    @ApiModelProperty(notes = "사용자 이름을 입력해 주세요") // Swagger
+    private String name;
+
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") /** JSON 날짜 응답 포맷 지정 */
+    @ApiModelProperty(notes = "사용자 가입날짜") // Swagger
+    private LocalDateTime joinDate;
+
+    @ApiModelProperty(notes = "사용자 패스워드를 입력해주세요") // Swagger
+    private String password;
+
+    @ApiModelProperty(notes = "사용자 주민번호를 입력해주세요") // Swagger
+    private String ssn;
+}
+```
+
+- Controller에 적용하기 - 1
+```java
+@RestController
+public class HelloController {
+
+    @Operation(summary = "test hello", description = "hello api example")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK !!"),
+            @ApiResponse(responseCode = "400", description = "BAD REQUEST !!"),
+            @ApiResponse(responseCode = "404", description = "NOT FOUND !!"),
+            @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR !!")
+    })
+    @GetMapping("/hello")
+    public ResponseEntity<String> hello(@Parameter(description = "이름", required = true, example = "Park") @RequestParam String name) {
+        return ResponseEntity.ok("hello " + name);
+    }
+}
+```
+
+- Controller에 적용하기 - 2
+```java
+@GetMapping("/users")
+@ApiOperation(value = "GET_ALL_USERS", notes = "get all users information")
+public List<UserDto> retrieveAllUsers() {
+    List<UserDto> users = userService.findAll();
+    return users;
+}
+```
+

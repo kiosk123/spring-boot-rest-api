@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -36,6 +37,7 @@ public class UserControllerV2 implements V2Controller {
     private final UserService userService;
 
     @GetMapping("/users")
+    @ApiOperation(value = "GET_ALL_USERS", notes = "get all users information")
     public List<UserDto> retrieveAllUsers() {
         List<UserDto> users = userService.findAll();
         return users;
