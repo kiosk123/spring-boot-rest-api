@@ -56,7 +56,9 @@ public class UserControllerV1 implements V1Controller {
     @PostMapping("/users")
     public UserResponseDto createUser(@RequestBody UserRequestDto userRequestDto) {
         User user = User.builder()
+            .password(userRequestDto.getPassword())
             .name(userRequestDto.getName())
+            .ssn(userRequestDto.getSsn())
             .build();
         Long userId = userService.saveUser(user);
         Optional<UserDto> findUser = userService.findOneUser(userId);

@@ -32,9 +32,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class UserControllerV2 implements V2Controller {
     
     private final UserService userService;
@@ -81,8 +83,11 @@ public class UserControllerV2 implements V2Controller {
      */
     @PostMapping("/users")
     public ResponseEntity<Void> createUser(@RequestBody @Valid UserRequestDto userRequestDto) {
+
         User user = User.builder()
+            .password(userRequestDto.getPassword())
             .name(userRequestDto.getName())
+            .ssn(userRequestDto.getSsn())
             .build();
         Long id = userService.saveUser(user);
 
