@@ -272,5 +272,74 @@ logging:
    # org.hibernate.type: trace #SQL 쿼리 파라미터를 확인할 수 있다
    # org.springframework: debug
     com.study: info
+```
 
+## HAL 브라우저를 이용한 HATEOAS 기능 구현
+- HAL: Hypertext Application Language - [참고](https://www.baeldung.com/spring-rest-hal)
+- API의 리소스들 사이에서 일관성있고 쉬운 방식으로 하이퍼링크에 접근하게 해주는 단순한 포맷  
+![.](./img/10.png)  
+
+- `build.gradle` 의존성 추가  
+```gradle
+implementation 'org.springframework.data:spring-data-rest-hal-browser:3.3.9.RELEASE' // Spring Boot 버전에 따라 적절히 호환되는 것으로 사용
+```
+
+- `http://localhost:<설정포트>/browser/index.html` 접속  
+![.](./img/11.png)  
+![.](./img/12.png)  
+
+## Spring Security를 이용한 인증처리
+![.](./img/13.png)  
+
+- `build.gradle` 의존성 추가
+```gradle
+implementation 'org.springframework.boot:spring-boot-starter-security'
+```
+
+- POSTMAN으로 테스트
+  - Security 아무 설정하지 않으면 기본으로는 HTTP BASIC으로 인증하게 된다.  
+  ![.](./img/14.png)  
+
+## Spring Security 구성 클래스 작성을 통한 사용자 인증처리
+
+- `application.yml`파일에 테스트를 위한 `username`과 `password`를 지정할 수 있다
+![.](./img/15.png)  
+
+- `application.yml` 설정
+```yml
+spring:
+  messages:
+    basename: messages # 다국어 식별 기본 파일명
+  datasource:
+    url: jdbc:h2:tcp://localhost/~/restapi
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  security:
+    user:
+      name: user
+      password: 123123
+# ... 생략
+```
+
+- Spring Security 구성 클래스를 직접 작성하고 사용자 인증처리를 위한 설정을 할 수도 있다.
+
+```java
+@Configuration
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        auth.inMemoryAuthentication()
+            .withUser("user")
+            .password("123123")
+            .roles("USER");
+    }
+    
+    // PaswordEncoder는 필수 여기서는 아무런 암호화 알고리즘을 사용하지는 않는다
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
+    }
+}
 ```

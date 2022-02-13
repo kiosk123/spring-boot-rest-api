@@ -6,6 +6,9 @@ import java.util.Optional;
 
 import javax.validation.Valid;
 
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.study.common.api.v2.V2Controller;
 import com.study.common.exception.UserNotFoundException;
 import com.study.user.controller.v1.dto.UserDto;
@@ -18,6 +21,7 @@ import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,13 +40,19 @@ public class UserControllerV2 implements V2Controller {
     private final UserService userService;
 
     @GetMapping("/users")
-    public List<UserDto> retrieveAllUsers() {
+    public MappingJacksonValue retrieveAllUsers() {
         List<UserDto> users = userService.findAll();
-        return users;
+
+        SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "joinDate", "ssn");
+        FilterProvider filterProvider = new SimpleFilterProvider().addFilter("UserInfo", filter); // @JsonFilter("UserInfo"), filter
+
+        MappingJacksonValue mapping = new MappingJacksonValue(users);
+        mapping.setFilters(filterProvider);
+        return mapping;
     }
 
     @GetMapping("/users/{id}")
-    public EntityModel<UserDto> retrieveUser(@PathVariable("id") Long id) {
+    public MappingJacksonValue retrieveUser(@PathVariable("id") Long id) {
         Optional<UserDto> user = userService.findOneUser(id);
         if (user.isPresent()) {
             // HATEOAS
@@ -53,7 +63,14 @@ public class UserControllerV2 implements V2Controller {
             WebMvcLinkBuilder linkTo = WebMvcLinkBuilder
                         .linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).retrieveAllUsers());
             model.add(linkTo.withRel("all-users"));
-            return model;
+
+            SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "joinDate", "ssn");
+            FilterProvider filterProvider = new SimpleFilterProvider().addFilter("UserInfo", filter); // @JsonFilter("UserInfo"), filter
+
+            MappingJacksonValue mapping = new MappingJacksonValue(model);
+            mapping.setFilters(filterProvider);
+            
+            return mapping;
         }
 
         throw new UserNotFoundException(String.format("ID[%s] not found", id));
