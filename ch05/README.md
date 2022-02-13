@@ -258,3 +258,73 @@ public class User {
 }
 ```
 
+## PostRepository 생성
+```java
+public interface PostRepository extends JpaRepository<Post, Long>{
+
+    @Query("select p from Post p join p.user on p.user.id = :userId")
+    List<Post> getPostsByUser(@Param("userId") Long userId);
+}
+```
+
+## PostService 작성
+```java
+@RequiredArgsConstructor
+@Service
+@Transactional(readOnly = true)
+public class PostService {
+    private final PostRepository postRepository;
+    private final UserRepository userRepository;
+
+    public List<PostDto> getPostsByUser(Long userId) {
+        List<Post> posts = postRepository.getPostsByUser(userId);
+        return posts.stream()
+                .map(p -> new PostDto(p.getId(), p.getDescription(), p.getCreateDate(), p.getUpdateDate()))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public Long savePostByUser(Long userId, PostDto postDto) {
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty()) {
+            throw new UserNotFoundException(String.format("ID[%s] not found", userId));
+        }
+        User findUser = user.get();
+        Post post = Post.builder().description(postDto.getDescription()).user(findUser).build();
+        postRepository.save(post);
+        return post.getId();
+    }
+}
+```
+
+## PostController 작성
+```java
+
+@RequiredArgsConstructor
+@RestController
+public class PostControllerV2 implements V2Controller {
+
+    private final UserService userService;
+    private final PostService postService;
+    
+    @GetMapping("/users/{userId}/posts")
+    public List<PostDto> retrieveAllPostsByUser(@PathVariable("userId") Long userId) {
+        Optional<UserDto> user = userService.findOneUser(userId);
+        if (user.isEmpty()) {
+            throw new UserNotFoundException(String.format("ID[%s] not found", userId));
+        }
+        
+        return postService.getPostsByUser(userId); 
+    }
+
+    @PostMapping("/users/{userId}/posts")
+    public ResponseEntity<Void> createPostByUser(@PathVariable("userId") Long userId, @RequestBody PostDto postDto) {
+        Long postId = postService.savePostByUser(userId, postDto);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(postId).toUri();
+        
+        return ResponseEntity.created(location).build();
+    }
+}
+```
+
+## PUT과 DELETE는 차후에 구현 예정
