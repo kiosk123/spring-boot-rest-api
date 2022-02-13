@@ -1,4 +1,4 @@
-# JPA 연동을 통한 REST API 개발
+# 5. JPA 연동을 통한 REST API 개발
 
 ## SecurityConfig 클래스 수정
 - CSRF `disable()` 의 의미 - [링크](https://zzang9ha.tistory.com/341)
