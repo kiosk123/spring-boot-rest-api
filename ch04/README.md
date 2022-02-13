@@ -223,8 +223,54 @@ public List<UserDto> retrieveAllUsers() {
 ```
 
 ## Actuator를 이용한 REST API Monitoring
-    ![.](./img/6.png)  
+Swagger 라이브러리와 충돌을 일으킬 수 있으므로 Swagger라이브러리와 관련코드를 제거한 후 진행하거나, Swagger버전을 호환되는 버전으로 찾아서 설정하도록 하는 것을 권장
+
+![.](./img/6.png)  
 - build.gradle 의존성 추가
 ```gradle
 implementation 'org.springframework.boot:spring-boot-starter-actuator'
+```
+
+- `locahost:<설정포트>/actuator`를 입력하여 모니터링 할 수 있는 URI 목록을 확인  
+![.](./img/7.png)  
+  
+위의 health 링크를 클릭하면 다음과 같이 표시된다 `UP`이라는 문자가 표시되면 서버가 작동 중인 것을 의미한다.  
+![.](./img/8.png)  
+
+- actuator로 조금 더 다양한 정보보기
+Spring Boot 2.1.x 부터 지원하며 `application.yml` 파일에 아래의 내용을 추가한다.  
+![.](./img/9.png)  
+```yml
+spring:
+  messages:
+    basename: messages # 다국어 식별 기본 파일명
+  datasource:
+    url: jdbc:h2:tcp://localhost/~/restapi
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+        - "*"
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+#        show_sql: true # System.out을 통해 출력
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.H2Dialect
+        default_batch_fetch_size: 100
+
+logging:
+  level:
+   # org.hibernate.SQL: debug #logger를 통해 출력
+   # org.hibernate.type: trace #SQL 쿼리 파라미터를 확인할 수 있다
+   # org.springframework: debug
+    com.study: info
+
 ```

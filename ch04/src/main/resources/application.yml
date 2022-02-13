@@ -1,15 +1,17 @@
 spring:
   messages:
     basename: messages # 다국어 식별 기본 파일명
-  mvc:
-    pathmatch:
-      matching-strategy: ant-path-matcher
   datasource:
     url: jdbc:h2:tcp://localhost/~/restapi
     username: sa
     password: 
     driver-class-name: org.h2.Driver
-    
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+        - "*"
   jpa:
     hibernate:
       ddl-auto: create
