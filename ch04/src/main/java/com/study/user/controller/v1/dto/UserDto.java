@@ -15,7 +15,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter @Setter
-@JsonFilter("UserInfo")
 public class UserDto {
     private Long id;
 

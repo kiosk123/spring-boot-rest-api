@@ -13,6 +13,8 @@ import com.study.user.controller.v1.dto.UserRequestDto;
 import com.study.user.domain.User;
 import com.study.user.service.UserService;
 
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,11 +42,20 @@ public class UserControllerV2 implements V2Controller {
     }
 
     @GetMapping("/users/{id}")
-    public UserDto retrieveUser(@PathVariable("id") Long id) {
+    public EntityModel<UserDto> retrieveUser(@PathVariable("id") Long id) {
         Optional<UserDto> user = userService.findOneUser(id);
         if (user.isPresent()) {
-           return user.get();
+            // HATEOAS
+            UserDto userDto = user.get();
+            EntityModel<UserDto> model = EntityModel.of(userDto);
+
+            // 현재 컨트롤러의 retrieveAllUser 메서드를 이용해서 링크 생성
+            WebMvcLinkBuilder linkTo = WebMvcLinkBuilder
+                        .linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).retrieveAllUsers());
+            model.add(linkTo.withRel("all-users"));
+            return model;
         }
+
         throw new UserNotFoundException(String.format("ID[%s] not found", id));
     }
 
