@@ -44,7 +44,7 @@ public class AdminUserControllerV2 implements V2Controller {
         SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "joinDate", "ssn");
         FilterProvider filterProvider = new SimpleFilterProvider().addFilter("UserInfo", filter); // @JsonFilter("UserInfo"), filter
 
-        MappingJacksonValue mapping = new MappingJacksonValue(users);
+        MappingJacksonValue mapping = new MappingJacksonValue(model);
         mapping.setFilters(filterProvider);
         
         return mapping;
