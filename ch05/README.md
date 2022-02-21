@@ -264,11 +264,15 @@ public interface PostRepository extends JpaRepository<Post, Long>{
 
     @Query("select p from Post p join p.user on p.user.id = :userId")
     List<Post> getPostsByUser(@Param("userId") Long userId);
+
+    @Query("select p from Post p join p.user on p.user.id = :userId and p.id = :postId")
+    Optional<Post> getPostByUser(@Param("userId") Long userId, @Param("postId")Long postId);
 }
 ```
 
 ## PostService 작성
 ```java
+
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
@@ -294,12 +298,39 @@ public class PostService {
         postRepository.save(post);
         return post.getId();
     }
+
+    @Transactional
+    public Long modifyPostByUser(Long userId, PostDto postDto) {
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty()) {
+            throw new UserNotFoundException(String.format("ID[%s] not found", userId));
+        }
+        User findUser = user.get();
+        Optional<Post> post = postRepository.getPostByUser(findUser.getId(), postDto.getId());
+        
+        if(post.isEmpty()) {
+            throw new PostNotFoundException(String.format("User ID[%s]\'s post ID[%s] not found", userId, postDto.getId()));
+        }
+        Post findPost = post.get();
+        findPost.setDescription(postDto.getDescription());
+        return findPost.getId();
+    }
+
+    @Transactional
+    public void removePostByUser(Long userId, Long postId) {
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty()) {
+            throw new UserNotFoundException(String.format("ID[%s] not found", userId));
+        }
+        User findUser = user.get();
+        Optional<Post> post = postRepository.getPostByUser(findUser.getId(), postId);
+        post.ifPresent(postRepository::delete);
+    }
 }
 ```
 
 ## PostController 작성
 ```java
-
 @RequiredArgsConstructor
 @RestController
 public class PostControllerV2 implements V2Controller {
@@ -319,12 +350,29 @@ public class PostControllerV2 implements V2Controller {
 
     @PostMapping("/users/{userId}/posts")
     public ResponseEntity<Void> createPostByUser(@PathVariable("userId") Long userId, @RequestBody PostDto postDto) {
-        Long postId = postService.savePostByUser(userId, postDto);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(postId).toUri();
+        postService.savePostByUser(userId, postDto);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().buildAndExpand().toUri();
         
         return ResponseEntity.created(location).build();
     }
+
+    @PutMapping("/users/{userId}/posts")
+    public ResponseEntity<Void> modifyPostByUser(@PathVariable("userId") Long userId, @RequestBody PostDto postDto) {
+        postService.modifyPostByUser(userId, postDto);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().buildAndExpand().toUri();
+        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        headers.add("Location", location.toString());
+        return new ResponseEntity<>(headers, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/users/{userId}/posts/{postId}")
+    public ResponseEntity<Void> removePostByUser(@PathVariable("userId") Long userId,
+                                                @PathVariable("postId") Long postId) {
+        postService.removePostByUser(userId, postId);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().buildAndExpand().toUri();
+        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        headers.add("Location", location.toString());
+        return new ResponseEntity<>(headers, HttpStatus.OK);
+    }
 }
 ```
-
-## PUT과 DELETE 그리고 POST하나만 조회는 차후에 구현 예정
