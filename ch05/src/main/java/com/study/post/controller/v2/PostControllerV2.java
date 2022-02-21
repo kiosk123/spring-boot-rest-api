@@ -12,9 +12,11 @@ import com.study.user.controller.v1.dto.UserDto;
 import com.study.user.service.UserService;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -40,9 +42,24 @@ public class PostControllerV2 implements V2Controller {
 
     @PostMapping("/users/{userId}/posts")
     public ResponseEntity<Void> createPostByUser(@PathVariable("userId") Long userId, @RequestBody PostDto postDto) {
-        Long postId = postService.savePostByUser(userId, postDto);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(postId).toUri();
+        postService.savePostByUser(userId, postDto);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().buildAndExpand().toUri();
         
         return ResponseEntity.created(location).build();
+    }
+
+    @PutMapping("/users/{userId}/posts")
+    public ResponseEntity<Void> modifyPostByUser(@PathVariable("userId") Long userId, @RequestBody PostDto postDto) {
+        postService.modifyPostByUser(userId, postDto);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().buildAndExpand().toUri();
+        
+        return ResponseEntity.created(location).build();
+    }
+
+    @DeleteMapping("/users/{userId}/posts/{postId}")
+    public ResponseEntity<Void> removePostByUser(@PathVariable("userId") Long userId,
+                                                @PathVariable("postId") Long postId) {
+        postService.removePostByUser(userId, postId);
+        return ResponseEntity.ok().build();
     }
 }

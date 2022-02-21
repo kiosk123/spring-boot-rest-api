@@ -24,8 +24,8 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         return new ResponseEntity(exceptionResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(UserNotFoundException.class) // UserNotFoundException이 발생할 경우 이 핸들러가 실행됨
-    public final ResponseEntity<Object> handleUserNotFoundException(Exception ex, WebRequest request) {
+    @ExceptionHandler(value = {UserNotFoundException.class, PostNotFoundException.class}) // UserNotFoundException이 발생할 경우 이 핸들러가 실행됨
+    public final ResponseEntity<Object> handleNotFoundException(Exception ex, WebRequest request) {
         ExceptionResponse exceptionResponse = new ExceptionResponse(LocalDateTime.now(), ex.getMessage(),
                 request.getDescription(false));
         return new ResponseEntity(exceptionResponse, HttpStatus.NOT_FOUND);
