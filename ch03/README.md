@@ -266,6 +266,8 @@ public class HelloControllerV1 implements V1Controller {
 ```
 결과  
 ![.](./img/4.png)  
+
+다국어 처리 Parsing 에러 처리 [참고](https://www.inflearn.com/questions/441681)
   
 ## Response 데이터 형식 변환 - XML format
 - 의존성 라이브러리 추가
