@@ -98,7 +98,7 @@ public class AdminUserControllerV2 implements V2Controller {
 
 - 오류 발생시 참고 - (스프링 부트 버전에 따른 호환성 문제 발생가능성 있음)
   - [링크1](https://www.baeldung.com/swagger-2-documentation-for-spring-rest-api)
-  - `Spring Boot 2.6.x`버전 이후에 `spring.mvc.pathmatch.matching-strategy` 값이 `ant-apth-matcher`에서 `path-pattern-parser`로 변경되면서  
+  - `Spring Boot 2.6.x`버전 이후에 `spring.mvc.pathmatch.matching-strategy` 값이 `ant-path-matcher`에서 `path-pattern-parser`로 변경되면서  
   몇몇 라이브러리(swagger포함)에 오류가 발생 `application.yml` 다음과 같이 수정
   ```yml
   spring:
